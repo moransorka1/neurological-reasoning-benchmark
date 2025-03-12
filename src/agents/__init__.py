@@ -4,8 +4,10 @@ from .neurology_agents import (
     QuestionInterpreter,
     ResearchRetrievalAgent,
     AnswerSynthesisAgent,
+    ValidatorAgent,
     RAGSearchTool,
-    AnswerSynthesisTool
+    AnswerSynthesisTool,
+    AnswerValidationTool
 )
 
 __all__ = [
@@ -15,6 +17,8 @@ __all__ = [
     'QuestionInterpreter',
     'ResearchRetrievalAgent',
     'AnswerSynthesisAgent',
+    'ValidatorAgent',
     'RAGSearchTool',
-    'AnswerSynthesisTool'
+    'AnswerSynthesisTool',
+    'AnswerValidationTool'
 ]

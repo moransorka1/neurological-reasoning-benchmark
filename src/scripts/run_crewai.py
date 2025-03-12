@@ -24,7 +24,8 @@ from src.agents.neurology_agents import (
     QuestionComplexityClassifier,
     QuestionInterpreter,
     ResearchRetrievalAgent,
-    AnswerSynthesisAgent
+    AnswerSynthesisAgent,
+    ValidatorAgent
 )
 from src.tasks.neurology_tasks import (
     NeurologyTaskManager,
@@ -119,7 +120,7 @@ def run_crewai_experiment(
         formatted_question = f"{question.text} \nChoices: {chr(10).join([f'{choice.label}. {choice.text}' for choice in question.choices])}"
         
         try:
-            # Create agents
+# Create agents
             question_complexity_classifier = QuestionComplexityClassifier(
                 config=agents_config['question_complexity_classifier'],
                 llm=llm
@@ -139,6 +140,12 @@ def run_crewai_experiment(
             
             answer_synthesis_agent = AnswerSynthesisAgent(
                 config=agents_config['answer_synthesis_agent'],
+                llm=llm,
+                model_name=model_name
+            )
+            
+            validator_agent = ValidatorAgent(
+                config=agents_config['validator_agent'],
                 llm=llm,
                 model_name=model_name
             )
@@ -163,19 +170,26 @@ def run_crewai_experiment(
                 context=[retrieve_store_knowledge_task]
             )
             
+            validate_answer_task = task_manager.create_validate_answer_task(
+                validator_agent=validator_agent.agent,
+                context=[synthesize_answer_task, retrieve_store_knowledge_task]
+            )
+            
             # Create crew
             crew = Crew(
                 agents=[
                     question_complexity_classifier.agent,
                     question_interpreter.agent,
                     research_retrieval_agent.agent,
-                    answer_synthesis_agent.agent
+                    answer_synthesis_agent.agent,
+                    validator_agent.agent
                 ],
                 tasks=[
                     classify_question_task,
                     optimize_question_task,
                     retrieve_store_knowledge_task,
-                    synthesize_answer_task
+                    synthesize_answer_task,
+                    validate_answer_task
                 ]
             )
             
@@ -194,7 +208,7 @@ def run_crewai_experiment(
             file_id = f"{question.exam}_{question.number}"
             output_path = save_crew_results(parsed_output, file_id, logs_dir)
             
-            # Extract final answer
+            # Extract final answer from validator agent (last task)
             model_answer = extract_final_answer(crew_output.tasks_output[-1])
             
             # Determine if answer is correct

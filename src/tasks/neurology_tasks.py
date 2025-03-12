@@ -4,7 +4,8 @@ from ..agents.neurology_agents import (
     ClassifyQuestionOutput, 
     OptimizeQuestionOutput,
     RetrievalOutput,
-    SynthesizeAnswerOutput
+    SynthesizeAnswerOutput,
+    ValidatorOutput
 )
 import json
 import yaml
@@ -117,6 +118,27 @@ class NeurologyTaskManager:
             output_pydantic=SynthesizeAnswerOutput,
             context=context
         )
+        
+    def create_validate_answer_task(self, validator_agent: Any, context: List[Task] = None) -> Task:
+        """
+        Create a task for validating answers.
+        
+        Args:
+            validator_agent: Agent for answer validation
+            context: Context tasks
+            
+        Returns:
+            CrewAI Task object
+        """
+        config = self.tasks_config.get('validate_answer_task', {})
+        
+        return Task(
+            description=config.get('description', ''),
+            agent=validator_agent,
+            expected_output=config.get('expected_output', ''),
+            output_pydantic=ValidatorOutput,
+            context=context
+        )
 
 def validate_retrieval_output(result: Any) -> Tuple[bool, Any]:
     """
@@ -163,16 +185,24 @@ def extract_final_answer(task_output: Any) -> str:
     if hasattr(task_output, 'raw'):
         try:
             data = json.loads(task_output.raw)
+            # First check for final_answer (from validator)
+            if 'final_answer' in data:
+                return data.get('final_answer', '')
+            # Otherwise use selected_answer (from synthesis)
             return data.get('selected_answer', '')
         except json.JSONDecodeError:
             pass
 
     # If it's a TaskOutput object with direct attribute access
+    elif hasattr(task_output, 'final_answer'):
+        return task_output.final_answer
     elif hasattr(task_output, 'selected_answer'):
         return task_output.selected_answer
 
     # If it's a dictionary
     elif isinstance(task_output, dict):
+        if 'final_answer' in task_output:
+            return task_output.get('final_answer', '')
         return task_output.get('selected_answer', '')
 
     # Fallback

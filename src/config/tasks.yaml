@@ -52,34 +52,21 @@ synthesize_answer_task:
       "reasoning": "Explain why this answer is correct and why others are incorrect."  
     }  
 
-explain_answer_task:  
+validate_answer_task:  
   description: >  
-    Using the output from the Answer Synthesis Agent and the retrieved knowledge from the RAG system, provide a detailed explanation and justification for the selected answer.  
-    The agent will:  
-    - Read the retrieved data from the file path provided by the Research & Retrieval Agent.  
-    - Retrieve the selected answer from the previous agent's output.  
-    - Create a thorough explanation and justification for the selected answer, utilizing both the answer rationale and the retrieved data for evidence.  
-    - Provide a step-by-step analysis for why the selected answer is correct, and why other options are incorrect.  
-    - If the selected answer is incorrect, refine and select the correct answer
+    Validate the answer provided by the Answer Synthesis Agent against the retrieved knowledge and clinical standards.
+    The agent will:
+    - Read the retrieved knowledge data from the previously stored file
+    - Analyze the selected answer and reasoning from the synthesis agent
+    - Verify that the answer is consistent with current medical knowledge and supported by evidence
+    - Confirm the answer if valid, or suggest corrections with detailed justification if not
+    - Provide a final validated answer based on rigorous clinical reasoning standards
 
   expected_output: >  
     A JSON-structured response containing:  
     {  
       "original_question": "Complete question text with choices",  
       "selected_answer": "The selected answer by previous agent a|b|c|d",  
-      "explanation": "Detailed step-by-step reasoning explaining if the selected answer is correct, and why the other options are incorrect. The explanation should reference specific excerpts from the retrieved data when relevant.",
-      "refined_answer": "The selected answer after validation a|b|c|d"
-    }  
-    
-quality_assurance_task:  
-  description: >  
-    Review the explanation and justification provided by the Explanation & Justification Agent for accuracy, clarity, and completeness.  
-    Ensure that the answer selection is supported by strong clinical reasoning and that the justification is clearly explained.  
-    Flag any issues or inconsistencies in the explanation, and provide recommendations for improvement.  
-
-  expected_output: >  
-    A JSON-structured response containing:  
-    {  
-      "original_question": "Complete question text with choices",  
-      "explanation_review": "Evaluation of the explanation's accuracy, clarity, and completeness. Indicate if the explanation is correct, well-reasoned, and supported by evidence from the retrieved data. If issues are found, provide suggestions for improvement."
+      "validation_result": "Validation analysis explaining whether the answer is valid and consistent with medical knowledge, citing specific evidence",
+      "final_answer": "The validated or corrected answer a|b|c|d"
     }
