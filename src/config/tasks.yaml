@@ -1,0 +1,85 @@
+classify_question_task:  
+  description: >  
+    Analyze the provided multi-choice neurology question: {original_question}.  
+    Determine its complexity level without answering it:  
+    - "simple" - if the question tests straightforward factual recall and does not require integration of multiple concepts or clinical reasoning. 
+    - "complex" - if the question requires analyzing multiple factors, layers of clinical reasoning and integration of knowledge.  
+
+  expected_output: >  
+    A JSON-structured response containing:  
+    {  
+      "original_question": "Complete question text with choices",  
+      "classification": "simple|complex",  
+      "classification_reasoning": "Step-by-step analysis"  
+    }  
+
+optimize_question_task:  
+  description: >  
+    Analyze the provided multi-choice neurology question: {original_question}.  
+    Extract key medical concepts, conditions, and anatomical structures.  
+    Generate up to 5 optimized query for information retrieval to maximize RAG retrieval effectiveness in order to accurately answer the multi-choice question.
+
+  expected_output: >  
+    A JSON-structured response containing:  
+    {  
+      "original_question": "Complete question text with choices",  
+      "extracted_concepts": ["key_term_1", "key_term_2", ...],  
+      "optimized_queries": ["query_1", "query_2", ...]
+    }  
+
+retrieve_store_knowledge_task:  
+  description: >  
+    Use the optimized queries provided by the Question Interpreter Agent to retrieve relevant information from the neurology book knowledge base (RAG system).  
+    Use the RAG tool to retrieve data for each query and consolidate all retrieved information into a single structured file.
+
+  expected_output: >  
+    A JSON-structured response containing:  
+    {  
+      "original_question": "Complete question text with choices",  
+      "retrieval_queries": ["query_1", "query_2", ...],  
+    }  
+
+synthesize_answer_task:  
+  description: >  
+    Use the tool AnswerSynthesisTool with the original neurology exam question and the retrieved knowledge from the RAG to synthesize a comprehensive answer. 
+    The tool reads a file contains the information retrieved from RAG, use it as a context and prompt the llm to generate answer.
+
+  expected_output: >  
+    A JSON-structured response containing:  
+    {  
+      "original_question": "Complete question text with choices",  
+      "selected_answer": "a|b|c|d",  
+      "reasoning": "Explain why this answer is correct and why others are incorrect."  
+    }  
+
+explain_answer_task:  
+  description: >  
+    Using the output from the Answer Synthesis Agent and the retrieved knowledge from the RAG system, provide a detailed explanation and justification for the selected answer.  
+    The agent will:  
+    - Read the retrieved data from the file path provided by the Research & Retrieval Agent.  
+    - Retrieve the selected answer from the previous agent's output.  
+    - Create a thorough explanation and justification for the selected answer, utilizing both the answer rationale and the retrieved data for evidence.  
+    - Provide a step-by-step analysis for why the selected answer is correct, and why other options are incorrect.  
+    - If the selected answer is incorrect, refine and select the correct answer
+
+  expected_output: >  
+    A JSON-structured response containing:  
+    {  
+      "original_question": "Complete question text with choices",  
+      "selected_answer": "The selected answer by previous agent a|b|c|d",  
+      "explanation": "Detailed step-by-step reasoning explaining if the selected answer is correct, and why the other options are incorrect. The explanation should reference specific excerpts from the retrieved data when relevant.",
+      "refined_answer": "The selected answer after validation a|b|c|d"
+    }  
+    
+quality_assurance_task:  
+  description: >  
+    Review the explanation and justification provided by the Explanation & Justification Agent for accuracy, clarity, and completeness.  
+    Ensure that the answer selection is supported by strong clinical reasoning and that the justification is clearly explained.  
+    Flag any issues or inconsistencies in the explanation, and provide recommendations for improvement.  
+
+  expected_output: >  
+    A JSON-structured response containing:  
+    {  
+      "original_question": "Complete question text with choices",  
+      "explanation_review": "Evaluation of the explanation's accuracy, clarity, and completeness. Indicate if the explanation is correct, well-reasoned, and supported by evidence from the retrieved data. If issues are found, provide suggestions for improvement."
+    }
